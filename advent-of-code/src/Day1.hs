@@ -1,6 +1,6 @@
 module Day1 where
 
-import Data.List (find, isInfixOf)
+import Data.List (find, isInfixOf, elemIndex)
 import Data.Maybe
 import Text.Read (readMaybe)
 
@@ -32,4 +32,4 @@ spelledOutDigits = ["one", "two", "three", "four", "five", "six", "seven", "eigh
 
 findFirstSpelledOutDigit search = findSpelledOutDigit search spelledOutDigits
 
-findSpelledOutDigit search digits = find (`isInfixOf` search) digits
+findSpelledOutDigit search digits = elemIndex True $ map (\digit -> not (null digit) && digit `isInfixOf` search) digits
