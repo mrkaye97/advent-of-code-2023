@@ -1,17 +1,16 @@
 module Day1 where
 
-import Data.List.Split (splitOn)
+import Data.List (find, isInfixOf)
 import Data.Maybe
 import Text.Read (readMaybe)
-import Data.List (find)
 
 main :: IO ()
 main = do
     s <- readFile "src/data/day1.txt"
     let calibrationValues = catMaybes $ map findFirstLastPair (lines s)
     print $ sum calibrationValues
+    print $ findFirstSpelledOutDigit "21onetwo4"
 
-findFirstLastPair :: String -> Maybe Int
 findFirstLastPair str = readMaybe (x ++ y)
   where
     x = case findFirstDigit str of
@@ -21,13 +20,16 @@ findFirstLastPair str = readMaybe (x ++ y)
         Just z -> [z]
         _ -> ""
 
-findFirstDigit :: String -> Maybe Char
 findFirstDigit str = find isDigit str
 
-findLastDigit :: String -> Maybe Char
 findLastDigit str = find isDigit $ reverse str
 
-isDigit :: Char -> Bool
 isDigit x = case readMaybe [x] :: Maybe Int of
     Just y | y `elem` [0 .. 9] -> True
     _ -> False
+
+spelledOutDigits = ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine"]
+
+findFirstSpelledOutDigit search = findSpelledOutDigit search spelledOutDigits
+
+findSpelledOutDigit search digits = find (`isInfixOf` search) digits
