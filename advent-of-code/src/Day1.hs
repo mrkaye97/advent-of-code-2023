@@ -8,15 +8,8 @@ import Data.List (find)
 main :: IO ()
 main = do
     s <- readFile "src/data/day1.txt"
-
-    print $ x
-    where
-        x = map findFirstLastPair s
-
--- doSomethingWith :: String -> IO ()
--- doSomethingWith str = print $ splitInputByLine str
-
--- splitInputByLine x = splitOn "\n" x
+    let calibrationValues = catMaybes $ map findFirstLastPair (lines s)
+    print $ sum calibrationValues
 
 findFirstLastPair :: String -> Maybe Int
 findFirstLastPair str = readMaybe (x ++ y)
