@@ -1,5 +1,5 @@
 import copy
-from typing import Optional, List, Tuple
+from typing import Any, Callable, Optional, List, Tuple
 
 from dataclasses import dataclass
 
@@ -7,7 +7,7 @@ from itertools import product
 from functools import reduce
 
 
-def flat_map(f, xs):
+def flat_map(f: Callable[[Any], Any], xs: List[Any]) -> List[Any]:
     return reduce(lambda a, b: a + b, map(f, xs))
 
 
