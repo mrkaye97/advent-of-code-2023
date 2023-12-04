@@ -45,11 +45,9 @@ print("Part I Solution:", sum(cards))
 
 
 ## Dynamic programming for II
-cards_flipped = cards[::-1]
-
 memo = {}
 
-for ix, card in enumerate(cards_flipped):
+for card in cards[::-1]:
     new_cards_won = cards[card.id : (card.id + len(card.wins))]
     children_values = sum([memo[c.id] for c in new_cards_won])
     memo[card.id] = len(new_cards_won) + children_values
