@@ -44,15 +44,15 @@ cards = list(map(parse_card, data))
 print("Part I Solution:", sum(cards))
 
 
-def count_cards_after_spawning(
-    card: LotteryCard, deck: list[LotteryCard] = cards
-) -> int:
-    if not card.wins:
-        return 1
+## Dynamic programming for II
+cards_flipped = cards[::-1]
 
-    new_cards_won = deck[card.id : (card.id + len(card.wins))]
+memo = {}
 
-    return 1 + sum([count_cards_after_spawning(c) for c in new_cards_won])
+for ix, card in enumerate(cards_flipped):
+    new_cards_won = cards[card.id : (card.id + len(card.wins))]
+    children_values = sum([memo[c.id] for c in new_cards_won])
+    memo[card.id] = len(new_cards_won) + children_values
 
 
-print("Part II Solution:", sum([count_cards_after_spawning(c) for c in cards]))
+print("Part II Solution:", len(cards) + sum(memo.values()))
