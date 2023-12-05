@@ -97,3 +97,18 @@ for seed in parsed["seeds"]:
 
 print("Part I Solution:", min(out))
 
+seed_pairs = list(zip(*(iter(parsed["seeds"]),) * 2))
+
+print(sum([s[1] for s in seed_pairs]))
+
+## Idea for part II:
+## for each seed range, split it into the possible matching "inputs"
+## in the first map
+## i.e. if the first map has two ranges 0,40 and 41,99
+## then we have two cases:
+##  1. the range is completely contained in an existing map range, e.g. 4, 30
+##     and we know all of 4,30 (input) will map to the same output, so we can just do it once
+##  2. the range spans multiple map ranges e.g. 35, 45
+##     so we need to split it into N sub-ranges, i.e. 35,40 and 41, 45 and then operate on each of those
+##
+## Then we do the same thing at each step
