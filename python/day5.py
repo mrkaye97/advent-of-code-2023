@@ -82,6 +82,14 @@ def determine_min_loc_for_seed_pair(pair: tuple[int, int], maps: dict[str, list[
 
     return minimum
 
+def partition_seed_pair(pair: tuple[int, int]) -> list[tuple[int, int]]:
+    minimum = pair[0]
+    maximum = pair[0] + pair[1]
+    chunk_size = 1_000_000
+    num_chunks = pair[1] // chunk_size
+
+    return [(minimum + c * chunk_size, minimum + (c + 1) * chunk_size - 1 if minimum + (c + 1) * chunk_size < maximum else maximum) for c in range(num_chunks + 1)]
+
 if __name__ == "__main__":
 
     with open("data/day5.txt", "r") as f:
@@ -99,6 +107,9 @@ if __name__ == "__main__":
     seed_pairs = list(zip(*(iter(parsed["seeds"]),) * 2))
 
     print(sum([s[1] for s in seed_pairs]))
+
+    seed_pairs = [partition_seed_pair(p) for p in seed_pairs]
+    seed_pairs = [item for sublist in seed_pairs for item in sublist]
 
     curried_2 = functools.partial(determine_min_loc_for_seed_pair, maps=parsed["maps"])
     print("Part II Solution:", min(pool.map(curried_2, seed_pairs)))
