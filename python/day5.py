@@ -1,46 +1,8 @@
 from itertools import groupby
 from dataclasses import dataclass
 from copy import deepcopy
-
-with open("data/day5.txt", "r") as f:
-    data = f.read().split("\n")
-
-# data = [
-#     "seeds: 79 14 55 13",
-#     "",
-#     "seed-to-soil map:",
-#     "50 98 2",
-#     "52 50 48",
-#     "",
-#     "soil-to-fertilizer map:",
-#     "0 15 37",
-#     "37 52 2",
-#     "39 0 15",
-#     "",
-#     "fertilizer-to-water map:",
-#     "49 53 8",
-#     "0 11 42",
-#     "42 0 7",
-#     "57 7 4",
-#     "",
-#     "water-to-light map:",
-#     "88 18 7",
-#     "18 25 70",
-#     "",
-#     "light-to-temperature map:",
-#     "45 77 23",
-#     "81 45 19",
-#     "68 64 13",
-#     "",
-#     "temperature-to-humidity map:",
-#     "0 69 1",
-#     "1 0 69",
-#     "",
-#     "humidity-to-location map:",
-#     "60 56 37",
-#     "56 93 4",
-# ]
-
+from multiprocessing import cpu_count, Pool
+import functools
 
 @dataclass
 class SeedMap:
@@ -70,8 +32,6 @@ def parse_input(d) -> dict[str, list[list[int]]]:
     }
 
 
-parsed = parse_input(data)
-
 def map_value(v: int, xs: list[SeedMap]) -> int:
     for m in xs:
         d = m.destination_range_start
@@ -87,19 +47,12 @@ def map_value(v: int, xs: list[SeedMap]) -> int:
     return v
 
 
-out = []
-for seed in parsed["seeds"]:
+def determine_location(seed: int, maps: dict[str, list[SeedMap]]) -> int:
     value = deepcopy(seed)
-    for m in parsed["maps"].values():
+    for m in maps.values():
         value = map_value(value, m)
 
-    out.append(value)
-
-print("Part I Solution:", min(out))
-
-seed_pairs = list(zip(*(iter(parsed["seeds"]),) * 2))
-
-print(sum([s[1] for s in seed_pairs]))
+    return value
 
 ## Idea for part II:
 ## for each seed range, split it into the possible matching "inputs"
@@ -112,3 +65,40 @@ print(sum([s[1] for s in seed_pairs]))
 ##     so we need to split it into N sub-ranges, i.e. 35,40 and 41, 45 and then operate on each of those
 ##
 ## Then we do the same thing at each step
+
+def determine_min_loc_for_seed_pair(pair: tuple[int, int], maps: dict[str, list[SeedMap]]) -> int:
+    minimum = 99
+    for s in range(pair[0], pair[0] + pair[1]):
+        if s % 1_000_000 == 0:
+            ## pair[0] is the start number
+            ## pair[1] is the total
+            ## s is the current value
+            ## (s - pair[0]) / pair[1] is the pct done?
+            print(pair, str(round(100 * (s - pair[0]) / pair[1], 3)) + "%")
+
+        location = determine_location(s, maps)
+        if location < minimum:
+            minimum = location
+
+    return minimum
+
+if __name__ == "__main__":
+
+    with open("data/day5.txt", "r") as f:
+        data = f.read().split("\n")
+
+    cores = cpu_count() - 2
+    pool = Pool(cores)
+
+    parsed = parse_input(data)
+
+    curried = functools.partial(determine_location, maps=parsed["maps"])
+
+    print("Part I Solution:", min(pool.map(curried, parsed["seeds"])))
+
+    seed_pairs = list(zip(*(iter(parsed["seeds"]),) * 2))
+
+    print(sum([s[1] for s in seed_pairs]))
+
+    curried_2 = functools.partial(determine_min_loc_for_seed_pair, maps=parsed["maps"])
+    print("Part II Solution:", min(pool.map(curried_2, seed_pairs)))
