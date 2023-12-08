@@ -81,8 +81,6 @@ def determine_loc_for_range(
         l = possibility.range_length
         e = s + l
 
-        print(possibility)
-
         ## If the current range is entirely contained
         ## within the "possibility" in the mapping
         if rng[0] >= s and rng[0] + rng[1] <= e:
