@@ -1,8 +1,8 @@
 from itertools import groupby
 from dataclasses import dataclass
 from copy import deepcopy
-from multiprocessing import cpu_count, Pool
 import functools
+
 
 @dataclass
 class SeedMap:
@@ -54,62 +54,103 @@ def determine_location(seed: int, maps: dict[str, list[SeedMap]]) -> int:
 
     return value
 
-## Idea for part II:
-## for each seed range, split it into the possible matching "inputs"
-## in the first map
-## i.e. if the first map has two ranges 0,40 and 41,99
-## then we have two cases:
-##  1. the range is completely contained in an existing map range, e.g. 4, 30
-##     and we know all of 4,30 (input) will map to the same output, so we can just do it once
-##  2. the range spans multiple map ranges e.g. 35, 45
-##     so we need to split it into N sub-ranges, i.e. 35,40 and 41, 45 and then operate on each of those
-##
-## Then we do the same thing at each step
 
-def determine_min_loc_for_seed_pair(pair: tuple[int, int], maps: dict[str, list[SeedMap]]) -> int:
-    minimum = 99
-    for s in range(pair[0], pair[0] + pair[1]):
-        if s % 1_000_000 == 0:
-            ## pair[0] is the start number
-            ## pair[1] is the total
-            ## s is the current value
-            ## (s - pair[0]) / pair[1] is the pct done?
-            print(pair, str(round(100 * (s - pair[0]) / pair[1], 3)) + "%")
+def any_range_overlap(rng: tuple[int, int], mapping: SeedMap) -> bool:
+    if rng[0] + rng[1] <= mapping.source_range_start:
+        return False
+    elif rng[0] >= (mapping.destination_range_start + mapping.range_length):
+        return False
+    else:
+        return True
 
-        location = determine_location(s, maps)
-        if location < minimum:
-            minimum = location
 
-    return minimum
+def determine_loc_for_range(
+    rng: tuple[int, int], maps: dict[str, list[SeedMap]], depth: int
+) -> int:
+    if depth == 7:
+        return rng[0]
 
-def partition_seed_pair(pair: tuple[int, int]) -> list[tuple[int, int]]:
-    minimum = pair[0]
-    maximum = pair[0] + pair[1]
-    chunk_size = 1_000_000
-    num_chunks = pair[1] // chunk_size
+    mapping: list[SeedMap] = list(maps.values())[depth]
+    ## If the range has no overlap with any of the mapping ranges, use the identity map
+    if not any([any_range_overlap(rng=rng, mapping=m) for m in mapping]) and depth != 7:
+        return determine_loc_for_range(rng=rng, maps=maps, depth=depth + 1)
 
-    return [(minimum + c * chunk_size, minimum + (c + 1) * chunk_size - 1 if minimum + (c + 1) * chunk_size < maximum else maximum) for c in range(num_chunks + 1)]
+    for possibility in mapping:
+        s = possibility.source_range_start
+        d = possibility.destination_range_start
+        l = possibility.range_length
+        e = s + l
+
+        print(possibility)
+
+        ## If the current range is entirely contained
+        ## within the "possibility" in the mapping
+        if rng[0] >= s and rng[0] + rng[1] <= e:
+            ## Base case -- if the depth is 6, we've reached the end (I think)
+            ## And in this case, we need to check if the range is contained in one of the options
+            ## and if it is, return the value
+            if depth == 7:
+                return rng[0]
+            ## In this case, we haven't reached the last map yet,
+            ## so we need to map the values from the current "level"
+            ## to the next "level"
+            ## This is the hard part, it seems
+            else:
+                new_range = rng[0] + (d - s), rng[1]
+                return determine_loc_for_range(
+                    rng=new_range, maps=maps, depth=depth + 1
+                )
+
+    ## By this point, all we're left with are
+    ## ranges that are not contained in a single mapping range
+    ## meaning they span multiple possibilities
+    ## For these, we need to split them by the cutoffs assigned by
+    ## the possibilities and recurse
+    for possibility in mapping:
+        s = possibility.source_range_start
+        l = possibility.range_length
+        e = s + l
+
+        ## if the range starts inside of the possiblity range
+        if rng[0] >= s and rng[0] < (s + l):
+            ## we know that this range isn't contained in the possibility,
+            ## so we need to split it
+            lower = rng[0], e - rng[0]
+            upper = e, rng[0] + rng[1] - e
+
+            return min(
+                determine_loc_for_range(rng=lower, maps=maps, depth=depth),
+                determine_loc_for_range(rng=upper, maps=maps, depth=depth),
+            )
+
+        if rng[0] < s and rng[0] + rng[1] > s:
+            lower = rng[0], s - rng[0]
+            upper = s, (rng[0] + rng[1]) - s
+
+            return min(
+                determine_loc_for_range(rng=lower, maps=maps, depth=depth) or 100,
+                determine_loc_for_range(rng=upper, maps=maps, depth=depth) or 100,
+            )
+
 
 if __name__ == "__main__":
-
     with open("data/day5.txt", "r") as f:
         data = f.read().split("\n")
-
-    cores = cpu_count() - 2
-    pool = Pool(cores)
 
     parsed = parse_input(data)
 
     curried = functools.partial(determine_location, maps=parsed["maps"])
 
-    print("Part I Solution:", min(pool.map(curried, parsed["seeds"])))
+    print("Part I Solution:", min(map(curried, parsed["seeds"])))
 
     seed_pairs = list(zip(*(iter(parsed["seeds"]),) * 2))
 
-    print(sum([s[1] for s in seed_pairs]))
-
-    seed_pairs = [partition_seed_pair(p) for p in seed_pairs]
-    seed_pairs = [item for sublist in seed_pairs for item in sublist]
-
-    curried_2 = functools.partial(determine_min_loc_for_seed_pair, maps=parsed["maps"])
-    print("Part II Solution:", min(pool.map(curried_2, seed_pairs)))
+    print(
+        "Part II Solution:",
+        min(
+            [
+                determine_loc_for_range(s, maps=parsed["maps"], depth=0)
+                for s in seed_pairs
+            ]
+        ),
+    )
