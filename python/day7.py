@@ -14,6 +14,7 @@ class HandType(str, Enum):
     ONE_PAIR = 2
     HIGH_CARD = 1
 
+
 card_values = {
     "A": 14,
     "K": 13,
@@ -29,6 +30,7 @@ card_values = {
     "3": 3,
     "2": 2,
 }
+
 
 class Hand:
     def __init__(self, cards: str, bid: str):
@@ -65,6 +67,7 @@ class Hand:
     def __repr__(self):
         return f"<Hand Object> Cards: {self.cards}; Bid: {self.bid}; Type: {self.type}"
 
-hands = list(map(lambda x: Hand(*x.split()), data))
-print("Part I Solution:", sum([h.bid * (ix + 1) for ix, h in enumerate(sorted(hands))]))
 
+hands = list(map(lambda x: Hand(*x.split()), data))
+
+print("Part I Solution:", sum([h.bid * (ix + 1) for ix, h in enumerate(sorted(hands))]))
