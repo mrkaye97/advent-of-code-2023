@@ -29,7 +29,7 @@ card_values = {
     "4": 4,
     "3": 3,
     "2": 2,
-    "1": 1
+    "1": 1,
 }
 
 
@@ -74,9 +74,17 @@ class Hand:
                 most_common_item = sorted(item_counts.keys(), reverse=True)[1]
         else:
             most_common_item = item_counts.most_common(1)[0][0]
-            if item_counts.most_common(1)[0][0] == 11 and len(item_counts) > 1 and item_counts.most_common(2)[1][0] > 1:
+            if (
+                item_counts.most_common(1)[0][0] == 11
+                and len(item_counts) > 1
+                and item_counts.most_common(2)[1][0] > 1
+            ):
                 most_common_item = item_counts.most_common(2)[1][0]
-            elif most_common_item == 11 and len(item_counts) > 1 and max(item_counts.keys()) != 11:
+            elif (
+                most_common_item == 11
+                and len(item_counts) > 1
+                and max(item_counts.keys()) != 11
+            ):
                 most_common_item = max(item_counts.keys())
             elif most_common_item == 11 and len(item_counts) > 1:
                 most_common_item = sorted(item_counts.keys(), reverse=True)[1]

@@ -13,6 +13,7 @@ mapping = {
     for x in [y.split(" = ") for y in data[1:] if y]
 }
 
+
 def compute_steps_through_graph(current_position: str):
     steps = 0
     while current_position != "ZZZ":
@@ -35,7 +36,10 @@ def compute_steps_through_graph_2(current_position: str):
 
     return steps
 
+
 starting_positions = [x for x in mapping.keys() if x[-1] == "A"]
 
-print("Part II Solution:", lcm(*[compute_steps_through_graph_2(x) for x in starting_positions]))
-
+print(
+    "Part II Solution:",
+    lcm(*[compute_steps_through_graph_2(x) for x in starting_positions]),
+)
