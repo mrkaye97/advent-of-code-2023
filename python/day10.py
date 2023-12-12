@@ -14,24 +14,50 @@ bends = {
     "7": ("s", "w"),
     "F": ("s", "e"),
     ".": (None, None),
-    "S": (None, None)
+    "S": (None, None),
 }
 
 g = nx.Graph()
 
+
 def generate_node_name(row, column):
     return f"{row}-{column}"
+
 
 def find_next_index(x, row, column, data) -> tuple[int, int]:
     match x:
         case "n":
-            return row - 1, column if row > 0 and data[row-1][column] in ["7", "|", "F", "S"] else None, None
+            return (
+                row - 1,
+                column
+                if row > 0 and data[row - 1][column] in ["7", "|", "F", "S"]
+                else None,
+                None,
+            )
         case "s":
-            return row + 1, column if row < len(data) - 1 and data[row+1][column] in ["L", "|", "J", "S"] else None, None
+            return (
+                row + 1,
+                column
+                if row < len(data) - 1 and data[row + 1][column] in ["L", "|", "J", "S"]
+                else None,
+                None,
+            )
         case "e":
-            return row, column + 1 if column < len(data[row]) - 1 and data[row][column + 1] in ["7", "-", "J", "S"] else None, None
+            return (
+                row,
+                column + 1
+                if column < len(data[row]) - 1
+                and data[row][column + 1] in ["7", "-", "J", "S"]
+                else None,
+                None,
+            )
         case "w":
-            return row, column - 1 if column > 0 and data[row][column - 1] in ["L", "-", "F", "S"] else None
+            return (
+                row,
+                column - 1
+                if column > 0 and data[row][column - 1] in ["L", "-", "F", "S"]
+                else None,
+            )
         case _:
             return None, None
 
@@ -48,23 +74,21 @@ for row in range(len(data)):
 
 for row in range(len(data)):
     for column in range(len(data[row])):
-
         next_indices = find_next_indices(data=data, row=row, column=column)
         for ix in next_indices:
             if ix[0] is not None and ix[1] is not None:
                 l = generate_node_name(row, column)
                 r = generate_node_name(ix[0], ix[1])
 
-                g.add_edge(
-                    l,
-                    r
-                )
+                g.add_edge(l, r)
+
 
 def find_start_node(data) -> tuple[int, int]:
     for row in range(len(data)):
         for column in range(len(data[row])):
             if data[row][column] == "S":
                 return generate_node_name(row, column)
+
 
 s = find_start_node(data)
 
@@ -86,7 +110,10 @@ for row in range(len(data)):
     x = [[data[row][ix], "."] for ix in range(len(data[row]))]
     data[row] = [item for sublist in x for item in sublist]
 
-def get_neighbors(row: int, column: int, data: list[list[str]], walls: set[tuple[int, int]]) -> list[tuple[int, int]]:
+
+def get_neighbors(
+    row: int, column: int, data: list[list[str]], walls: set[tuple[int, int]]
+) -> list[tuple[int, int]]:
     neighbors = []
 
     if row > 0 and generate_node_name(row - 1, column) not in walls:
@@ -103,7 +130,13 @@ def get_neighbors(row: int, column: int, data: list[list[str]], walls: set[tuple
 
     return neighbors
 
-def dfs(start: tuple[int, int], end: tuple[int, int], data: list[list[str]], walls: set[tuple[int, int]]) -> bool:
+
+def dfs(
+    start: tuple[int, int],
+    end: tuple[int, int],
+    data: list[list[str]],
+    walls: set[tuple[int, int]],
+) -> bool:
     if generate_node_name(start[0], start[1]) in walls:
         return True
 
@@ -130,10 +163,18 @@ for edge in cycle:
     walls.add(edge[0])
     walls.add(edge[1])
 
-walls = {generate_node_name(int(n.split("-")[0]) + 2, int(n.split("-")[1]) + 2) for n in walls}
+walls = {
+    generate_node_name(int(n.split("-")[0]) + 2, int(n.split("-")[1]) + 2)
+    for n in walls
+}
 
 
-results = [(row, column) for row in range(len(data)) for column in range(len(data[row])) if not dfs((row, column), (1,1), data, walls)]
+results = [
+    (row, column)
+    for row in range(len(data))
+    for column in range(len(data[row]))
+    if not dfs((row, column), (1, 1), data, walls)
+]
 
 print(len(results))
 
